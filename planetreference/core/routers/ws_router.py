@@ -26,7 +26,7 @@ router = APIRouter()
 )
 async def get_wkts(
     limit: Optional[int] = Query(
-        50, description="Number of records to display", gt=0, le=100
+        50, description="Number of records to display", gt=-1, le=101
     ),
     offset: Optional[int] = Query(
         0, description="Number of record from which we start to display", gt=-1
@@ -65,13 +65,13 @@ async def get_versions():
 )
 async def get_version(
     version_id: int = Path(
-        default=2015, description="Version of the WKT", gt=0
+        default=2015, description="Version of the WKT", gt=2014
     ),
     limit: Optional[int] = Query(
-        50, description="Number of records to display", gt=0, le=100
+        50, description="Number of records to display", gt=-1, le=101
     ),
     offset: Optional[int] = Query(
-        0, description="Number of record from which we start to display", gt=0
+        0, description="Number of record from which we start to display", gt=-1
     ),
 ):
     obj = (
@@ -97,7 +97,7 @@ async def get_version(
 )
 async def get_wkt_version(
     version_id: int = Path(
-        default=2015, description="Version of the WKT", gt=0
+        default=2015, description="Version of the WKT", gt=2014
     ),
     wkt_id: str = Path(
         default="IAU:2015:1000",

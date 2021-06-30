@@ -1,4 +1,14 @@
-### Add ographic/ocentric in metadata (HEAD -> main)
+### Fix range of validation (HEAD -> main)
+>Wed, 30 Jun 2021 18:58:33 +0200
+
+>Author: Jean-Christophe Malapert (jean-christophe.malapert@cnes.fr)
+
+>Commiter: Jean-Christophe Malapert (jean-christophe.malapert@cnes.fr)
+
+
+
+
+### Add ographic/ocentric in metadata (origin/main)
 >Wed, 30 Jun 2021 18:45:53 +0200
 
 >Author: Jean-Christophe Malapert (jean-christophe.malapert@cnes.fr)
@@ -8,7 +18,7 @@
 
 
 
-### First commit (origin/main)
+### First commit
 >Wed, 30 Jun 2021 14:53:04 +0200
 
 >Author: Jean-Christophe Malapert (jean-christophe.malapert@cnes.fr)
