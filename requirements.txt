@@ -1,0 +1,6 @@
+setuptools-scm
+fastapi
+uvicorn[standard]
+tortoise-orm
+pydantic
+asyncpg
