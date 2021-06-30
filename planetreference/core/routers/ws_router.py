@@ -1,3 +1,4 @@
+import logging
 import pathlib
 import re
 from typing import List, Optional
@@ -12,6 +13,9 @@ from tortoise.functions import Lower
 
 from ..business import WktDatabase
 from ..models import WKT_model, Wkt_Pydantic
+from ..models import CenterCs
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 # https://datacarpentry.org/python-ecology-lesson/09-working-with-sql/index.html
@@ -185,12 +189,13 @@ async def startup_event():
         await Tortoise.generate_schemas()
         wkt = WktDatabase()
         index = wkt.index
-        print(f"nb records : {len(index)}")
+        logger.info(f"nb records : {len(index)}")
         for record in index:
             wkt_data = {
                 "id": f"IAU:{record.iau_version}:{record.iau_code}",
                 "version": int(record.iau_version),
                 "code": int(record.iau_code),
+                "center_cs": CenterCs.find_enum(record.origin_crs),
                 "solar_body": re.match(r"[^\s]+", record.datum).group(0),
                 "datum_name": record.datum,
                 "ellipsoid_name": record.ellipsoid,
@@ -199,7 +204,7 @@ async def startup_event():
             }
             await WKT_model.create(**wkt_data)
     else:
-        print("loading the db")
+        logger.info("loading the db")
 
 
 @router.on_event("shutdown")

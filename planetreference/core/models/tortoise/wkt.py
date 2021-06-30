@@ -6,6 +6,29 @@ class CenterCs(str, Enum):
     OCENTRIC = "OCENTRIC"
     OGRAPHIC = "OGRAPHIC"
 
+    @staticmethod
+    def find_enum(name: str):
+        """Find enum based on its value
+
+        Args:
+            name (str): enum value
+
+        Raises:
+            ValueError: Unknown value
+
+        Returns:
+            PF: Enum
+        """
+        result = None
+        for pf_name in CenterCs.__members__:
+            val = str(CenterCs[pf_name].value)
+            if val == name.upper():
+                result = CenterCs[pf_name]
+                break
+        if result is None:
+            raise ValueError(f"Unknown enum value for {name}")
+        return result
+
 
 class WKT(models.Model):
     """

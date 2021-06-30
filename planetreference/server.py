@@ -13,4 +13,4 @@ app = FastAPI(
 )
 logger.info("Starting application initialization...")
 init(app)
-logger.success("Successfully initialized!")
+logger.info("Successfully initialized!")
