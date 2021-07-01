@@ -1,4 +1,14 @@
-### Fix range of validation (HEAD -> main)
+### Add a method in Makefile to clean python pyc pycache files Refactor a bit the router (HEAD -> main)
+>Thu, 1 Jul 2021 02:46:02 +0200
+
+>Author: Jean-Christophe Malapert (jean-christophe.malapert@cnes.fr)
+
+>Commiter: Jean-Christophe Malapert (jean-christophe.malapert@cnes.fr)
+
+
+
+
+### Fix range of validation (origin/main)
 >Wed, 30 Jun 2021 18:58:33 +0200
 
 >Author: Jean-Christophe Malapert (jean-christophe.malapert@cnes.fr)
@@ -8,7 +18,7 @@
 
 
 
-### Add ographic/ocentric in metadata (origin/main)
+### Add ographic/ocentric in metadata
 >Wed, 30 Jun 2021 18:45:53 +0200
 
 >Author: Jean-Christophe Malapert (jean-christophe.malapert@cnes.fr)

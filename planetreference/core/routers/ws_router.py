@@ -1,5 +1,6 @@
 import logging
 import pathlib
+from planetreference.core.models.pydantic import wkt
 import re
 from typing import List, Optional
 
@@ -21,8 +22,32 @@ router = APIRouter()
 # https://datacarpentry.org/python-ecology-lesson/09-working-with-sql/index.html
 
 
+async def get_wkt_obj(wkt_id: str) -> WKT_model:
+    """Retrieves the WKT representation from the database based on its id.
+
+    Args:
+        wkt_id (str): WKT id
+
+    Raises:
+        HTTPException: WKT not found in the database
+
+    Returns:
+        WKT_model: WKT object
+    """
+    obj = await WKT_model.get_or_none(id=wkt_id)
+    if obj is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"{wkt_id} not found"
+        )
+    wkt_obj: WKT_model = await Wkt_Pydantic.from_tortoise_orm(obj)
+    return wkt_obj
+
+
 @router.get(
-    "/wkts", response_model=List[Wkt_Pydantic], description="List all WKTs"
+    "/wkts",
+    summary="Get information about WKTs.",
+    response_model=List[Wkt_Pydantic],
+    description="Lists all WKTs regardless of version",
 )
 async def get_wkts(
     limit: Optional[int] = Query(
@@ -33,16 +58,15 @@ async def get_wkts(
     ),
 ):
     return await Wkt_Pydantic.from_queryset(
-        WKT_model.all()
-        .limit(limit if limit else limit.default)
-        .offset(offset if offset else offset.default)
+        WKT_model.all().limit(limit).offset(offset)
     )
 
 
 @router.get(
     "/wkts/versions",
+    summary="Get versions of the WKTs.",
     response_model=List[int],
-    description="List all available versions of the WKT.",
+    description="List all available versions of the WKT based on IAU reports.",
 )
 async def get_versions():
     objs = (
@@ -59,6 +83,7 @@ async def get_versions():
 
 @router.get(
     "/wkts/versions/{version_id}",
+    summary="Get information about WKTs for a given version",
     response_model=List[Wkt_Pydantic],
     responses={status.HTTP_404_NOT_FOUND: {"model": HTTPNotFoundError}},
     description="List WKTs for a given version",
@@ -75,9 +100,7 @@ async def get_version(
     ),
 ):
     obj = (
-        await WKT_model.filter(version=version_id)
-        .limit(limit if limit else limit.default)
-        .offset(offset if offset else offset.default)
+        await WKT_model.filter(version=version_id).limit(limit).offset(offset)
     )
     if len(obj) == 0:
         raise HTTPException(
@@ -89,6 +112,8 @@ async def get_version(
 
 @router.get(
     "/wkts/versions/{version_id}/{wkt_id}",
+    summary="Get a WKT for a given version.",
+    description="Retrieve a WKT",
     response_model=str,
     responses={
         status.HTTP_404_NOT_FOUND: {"model": HTTPNotFoundError},
@@ -105,23 +130,18 @@ async def get_wkt_version(
         regex="^.*:\d*:\d*$",
     ),
 ):
-    m = re.match(r"IAU:(?P<version>.*):(?P<wkt>.*)", wkt_id)
-    if m is None:
+    wkt_obj: WKT_model = await get_wkt_obj(wkt_id)
+    if wkt_obj.version != version_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"{wkt_id} pattern is not recognized",
+            detail=f"Wrong version {version_id} for this WKT {wkt_id}",
         )
-    elif m.group("version") != str(version_id):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"{wkt_id} is not part of the WKTs in {version_id}",
-        )
-    else:
-        return RedirectResponse(url=f"/ws/wkts/{wkt_id}")
+    return wkt_obj.wkt
 
 
 @router.get(
     "/wkts/{wkt_id}",
+    summary="Get a WKT",
     response_model=str,
     responses={status.HTTP_404_NOT_FOUND: {"model": HTTPNotFoundError}},
     description="Retrieve a WKT for a given WKT ID.",
@@ -134,16 +154,16 @@ async def get_wkt(
         regex="^.*:\d*:\d*",
     ),
 ):
-    obj = await WKT_model.get_or_none(id=wkt_id)
-    if obj is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"{wkt_id} not found"
-        )
-    wkt_obj: WKT_model = await Wkt_Pydantic.from_tortoise_orm(obj)
+    wkt_obj: WKT_model = await get_wkt_obj(wkt_id)
     return wkt_obj.wkt
 
 
-@router.get("/solar_bodies", response_model=List[str])
+@router.get(
+    "/solar_bodies",
+    summary="Get solar bodies",
+    description="Lists all available solar bodies",
+    response_model=List[str],
+)
 async def get_solar_bodies():
     objs = (
         await WKT_model.all()
@@ -159,6 +179,8 @@ async def get_solar_bodies():
 
 @router.get(
     "/solar_bodies/{solar_body}",
+    summary="Get information about WKTs for a given solar body",
+    description="Lists all WKTs for a given solar body",
     response_model=List[Wkt_Pydantic],
     responses={status.HTTP_404_NOT_FOUND: {"model": HTTPNotFoundError}},
 )
@@ -172,6 +194,33 @@ async def get_solar_body(solar_body: str):
             detail=f"{solar_body} not found",
         )
     return obj
+
+
+@router.get(
+    "/solar_bodies/{solar_body}/{wkt_id}",
+    summary="Get a WKT for a given solar body.",
+    description="Retrieve a WKT",
+    response_model=str,
+    responses={
+        status.HTTP_404_NOT_FOUND: {"model": HTTPNotFoundError},
+        status.HTTP_400_BAD_REQUEST: {"model": HTTPNotFoundError},
+    },
+)
+async def get_wkt_body(
+    solar_body: str,
+    wkt_id: str = Path(
+        default="IAU:2015:1000",
+        description="Identifier of the WKT",
+        regex="^.*:\d*:\d*$",
+    ),
+):
+    wkt_obj: WKT_model = await get_wkt_obj(wkt_id)
+    if wkt_obj.solar_body.lower() != solar_body.lower():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"{wkt_id} not found for {solar_body}",
+        )
+    return wkt_obj.wkt
 
 
 @router.on_event("startup")

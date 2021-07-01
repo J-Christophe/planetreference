@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := init
-.PHONY: prepare-dev install-dev data help lint tests coverage upload-prod-pypi upload-test-pypi doc doc-pdf visu-doc-pdf visu-doc tox licences
+.PHONY: prepare-dev install-dev pyclean data help lint tests coverage upload-prod-pypi upload-test-pypi doc doc-pdf visu-doc-pdf visu-doc tox licences
 VENV = ".planetreference"
 
 define PROJECT_HELP_MSG
@@ -39,6 +39,7 @@ Usage:\n
 	make coverage\t\t 	Coverage\n
 	make lint\t\t		Lint\n
 	make tox\t\t 		Run all tests\n
+	make pyclean\t\t	Clean .py files and pycache directory
 
 endef
 export PROJECT_HELP_MSG
@@ -118,3 +119,7 @@ upload-prod-pypi:
 
 licences:
 	pip-licenses
+
+pyclean:
+	find . -type f -name '*.py[co]' -delete -o -type d -name __pycache__ -delete
+
